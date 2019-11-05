@@ -22,9 +22,16 @@ module.exports = {
     'react/jsx-filename-extension': [
       'warn',
       {
-        extensions: ['.jsx', '.js'],
+        extensions: ['.jsx', 'js'],
       },
     ],
     'import/prefer-default-export': 'off',
+    'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+    'react/jsx-one-expression-per-line': 'off',
+    'react-native/no-raw-text': 'off',
+    'react/state-in-constructor': 'off',
+    'react/static-property-placement': 'off',
+    'react/jsx-props-no-spreading': 'off',
+    'no-use-before-define': 'off',
   },
 };
