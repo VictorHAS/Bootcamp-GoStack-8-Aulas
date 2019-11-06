@@ -1,3 +1,4 @@
+/* eslint-disable no-shadow */
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import api from '../../services/api';
@@ -14,20 +15,44 @@ import {
   Info,
   Title,
   Author,
+  Loading,
 } from './styles';
 
 export default function User({ navigation }) {
   const [stars, setStars] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [page, setPage] = useState(1);
   const user = navigation.getParam('user');
 
   useEffect(() => {
-    async function getUser() {
-      const response = await api.get(`/users/${user.login}/starred`);
-      setStars(response.data);
-    }
-
-    getUser();
+    load(page);
   }, []);
+
+  async function load(page) {
+    const response = await api.get(`/users/${user.login}/starred`, {
+      params: { page },
+    });
+
+    setStars(page >= 2 ? [...stars, ...response.data] : response.data);
+    setPage(page);
+    setLoading(false);
+    setRefreshing(false);
+  }
+
+  function loadMore() {
+    load(page + 1);
+  }
+
+  function refreshList() {
+    setRefreshing(true);
+    setStars([]);
+    load(1);
+  }
+
+  function handleNavigate(repository) {
+    navigation.navigate('Repository', { repository });
+  }
 
   return (
     <Container>
@@ -37,19 +62,27 @@ export default function User({ navigation }) {
         <Bio>{user.bio}</Bio>
       </Header>
 
-      <Stars
-        data={stars}
-        keyExtractor={star => String(star.id)}
-        renderItem={({ item }) => (
-          <Starred>
-            <OwnerAvatar source={{ uri: item.owner.avatar_url }} />
-            <Info>
-              <Title>{item.name}</Title>
-              <Author>{item.owner.login}</Author>
-            </Info>
-          </Starred>
-        )}
-      />
+      {loading ? (
+        <Loading />
+      ) : (
+        <Stars
+          data={stars}
+          onRefresh={refreshList}
+          refreshing={refreshing}
+          keyExtractor={star => String(star.id)}
+          onEndReachedThreshold={0.2}
+          onEndReached={loadMore}
+          renderItem={({ item }) => (
+            <Starred onPress={() => handleNavigate(item)}>
+              <OwnerAvatar source={{ uri: item.owner.avatar_url }} />
+              <Info>
+                <Title>{item.name}</Title>
+                <Author>{item.owner.login}</Author>
+              </Info>
+            </Starred>
+          )}
+        />
+      )}
     </Container>
   );
 }
@@ -61,5 +94,6 @@ User.navigationOptions = ({ navigation }) => ({
 User.propTypes = {
   navigation: PropTypes.shape({
     getParam: PropTypes.func,
+    navigate: PropTypes.func,
   }).isRequired,
 };

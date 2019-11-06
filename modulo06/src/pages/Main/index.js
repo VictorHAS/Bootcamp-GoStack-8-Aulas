@@ -12,6 +12,7 @@ import {
   SubmitButton,
   List,
   User,
+  Remove,
   Avatar,
   Name,
   Bio,
@@ -25,24 +26,47 @@ export default function Main({ navigation }) {
   const [loading, setLoading] = useState(false);
 
   async function handleAddUser() {
+    if (newUser === '') {
+      return alert('Digite um nome de usuario');
+    }
     setLoading(true);
-    const response = await api.get(`/users/${newUser}`);
+    const userExist = users.find(
+      user => user.login.toUpperCase() === newUser.toUpperCase()
+    );
+    if (userExist) {
+      setLoading(false);
+      return alert('O usuario já foi adicionado');
+    }
+    await api
+      .get(`/users/${newUser}`)
+      .then(response => {
+        if (response) {
+          const data = {
+            name: response.data.name,
+            login: response.data.login,
+            bio: response.data.bio,
+            avatar: response.data.avatar_url,
+          };
 
-    const data = {
-      name: response.data.name,
-      login: response.data.login,
-      bio: response.data.bio,
-      avatar: response.data.avatar_url,
-    };
-
-    setUsers([...users, data]);
-    setNewUser('');
-    setLoading(false);
-    Keyboard.dismiss();
+          setUsers([...users, data]);
+          setNewUser('');
+          setLoading(false);
+          return Keyboard.dismiss();
+        }
+      })
+      .catch(err => {
+        alert('Usuario não encontrado.');
+      });
+    return setLoading(false);
   }
 
   function handleNavigate(user) {
     navigation.navigate('User', { user });
+  }
+
+  function handleDelete(login) {
+    setUsers(users.filter(user => user.login !== login));
+    alert(`${login} removido!`);
   }
 
   useEffect(() => {
@@ -87,6 +111,11 @@ export default function Main({ navigation }) {
         keyExtractor={user => user.login}
         renderItem={({ item }) => (
           <User>
+            <Remove
+              name="delete"
+              size={20}
+              onPress={() => handleDelete(item.login)}
+            />
             <Avatar source={{ uri: item.avatar }} />
             <Name>{item.name}</Name>
             <Bio>{item.bio}</Bio>

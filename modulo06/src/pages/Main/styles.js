@@ -1,5 +1,6 @@
 import styled from 'styled-components/native';
 import { RectButton } from 'react-native-gesture-handler';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 export const Container = styled.View`
   flex: 1;
@@ -43,6 +44,15 @@ export const List = styled.FlatList.attrs({
 export const User = styled.View`
   align-items: center;
   margin: 0 20px 30px;
+  position: relative;
+`;
+
+export const Remove = styled(Icon).attrs({
+  color: '#ff0000',
+})`
+  position: absolute;
+  right: 0;
+  top: 0;
 `;
 
 export const Avatar = styled.Image`
